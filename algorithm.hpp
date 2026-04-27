@@ -5,10 +5,10 @@
 using namespace cv;
 using namespace std;
 
-class FeatureTracker
+class FeatureTrackerAmirali
 {
 public:
-    FeatureTracker();
+    FeatureTrackerAmirali();
     Rect run(VideoCapture &capture, Mat &out_frame);
 
 private:

@@ -5,7 +5,7 @@ LDFLAGS = `pkg-config --libs opencv4`
 
 TARGET = program
 
-SRCS = main.cpp algorithm.cpp metrics.cpp
+SRCS = main.cpp algorithm.cpp metrics.cpp FeatureTrackerRilke.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(TARGET)

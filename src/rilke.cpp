@@ -15,11 +15,6 @@ using namespace std;
 
 FeatureTracker::FeatureTracker()
 {
-    NumberPoints = 1000;
-    featureQuality = 0.2f;
-    minDistance = 4.0;
-
-    motionThreshold = 1.5f;
     foregroundThreshold = 0.5f;
 
     lkWindowSize = 15;
@@ -55,104 +50,56 @@ Rect FeatureTracker::run(const vector<string> &imageFiles)
     vector<string> files = imageFiles;
     reverse(files.begin(), files.end());
 
+    // Background subtractor
     Ptr<BackgroundSubtractor> fgbg =
         createBackgroundSubtractorMOG2(500, 16, false);
 
+    // Morphology kernel for mask cleanup
     Mat kernel = getStructuringElement(
         MORPH_ELLIPSE,
         Size(morphKernelSize, morphKernelSize));
 
-    Mat firstFrame = imread(files[0]);
-    if (firstFrame.empty())
-        return Rect();
+    // ================= BUILD BACKGROUND MODEL =================
 
-    Mat oldGrey;
-    cvtColor(firstFrame, oldGrey, COLOR_BGR2GRAY);
+    Mat lastValidFrame;
 
-    vector<Point2f> p0, p1;
-    goodFeaturesToTrack(oldGrey, p0, NumberPoints, featureQuality, minDistance);
-
-    vector<Track> tracks;
-    initTracks(p0, tracks);
-
-    Mat lastFrame = firstFrame.clone();
-
-    // ================= MAIN LOOP =================
-    for (size_t f = 1; f < files.size(); f++)
+    for (size_t f = 0; f < files.size(); f++)
     {
         Mat frame = imread(files[f]);
+
         if (frame.empty())
             continue;
 
-        frame.copyTo(lastFrame);
-
-        Mat grey;
-        cvtColor(frame, grey, COLOR_BGR2GRAY);
+        frame.copyTo(lastValidFrame); // Keep last valid frame for calculating final box
 
         Mat fgmask;
         fgbg->apply(frame, fgmask);
 
-        morphologyEx(fgmask, fgmask, MORPH_OPEN, kernel);
+        morphologyEx(fgmask, fgmask, MORPH_OPEN, kernel); // Clean up noise
         morphologyEx(fgmask, fgmask, MORPH_DILATE, kernel);
+    }
 
-        vector<uchar> status;
-        vector<float> err;
+    if (lastValidFrame.empty())
+        return Rect();
 
-        calcOpticalFlowPyrLK(
-            oldGrey, grey,
-            p0, p1,
-            status, err,
-            Size(lkWindowSize, lkWindowSize),
-            lkMaxLevel);
+    // ================= FINAL BOX =================
+    // Start from last frame and move backward until valid mask found
 
-        // ================= ADAPTIVE WEIGHT =================
+    for (int i = (int)files.size() - 1; i >= 0; i--)
+    {
+        Mat frame = imread(files[i]);
 
-        double fgPixels = countNonZero(fgmask);
-        double totalPixels = fgmask.rows * fgmask.cols;
-
-        float fgStrength = (totalPixels > 0)
-                               ? (float)(fgPixels / totalPixels)
-                               : 0.5f;
-
-        float bgWeight = std::clamp(fgStrength, 0.1f, 0.9f);
-        float flowWeight = 1.0f - bgWeight;
-
-        // ================= FUSION SCORE MAP =================
-
-        Mat score = Mat::zeros(frame.size(), CV_32F);
-
-        for (size_t i = 0; i < p1.size(); i++)
-        {
-            if (!status[i])
-                continue;
-
-            Point2f prev = p0[i];
-            Point2f curr = p1[i];
-
-            if (curr.x < 0 || curr.y < 0 ||
-                curr.x >= fgmask.cols || curr.y >= fgmask.rows)
-                continue;
-
-            float fg = fgmask.at<uchar>((int)curr.y, (int)curr.x) / 255.0f;
-
-            float motion = norm(curr - prev);
-            float motionScore = std::min(motion / 5.0f, 1.0f);
-
-            float confidence =
-                bgWeight * fg +
-                flowWeight * motionScore;
-
-            score.at<float>((int)curr.y, (int)curr.x) += confidence;
-        }
-
-        normalize(score, score, 0, 255, NORM_MINMAX);
+        if (frame.empty())
+            continue;
 
         Mat finalMask;
-        score.convertTo(finalMask, CV_8U);
+        fgbg->apply(frame, finalMask);
 
-        threshold(finalMask, finalMask, 80, 255, THRESH_BINARY);
+        morphologyEx(finalMask, finalMask, MORPH_OPEN, kernel);
+        morphologyEx(finalMask, finalMask, MORPH_DILATE, kernel);
 
-        // ================= BOUNDING BOX =================
+        // Optional threshold for stronger foreground only
+        threshold(finalMask, finalMask, 50, 255, THRESH_BINARY);
 
         vector<Point> points;
         findNonZero(finalMask, points);
@@ -160,33 +107,12 @@ Rect FeatureTracker::run(const vector<string> &imageFiles)
         if (!points.empty())
         {
             Rect box = boundingRect(points);
-
-            rectangle(frame, box, Scalar(0, 0, 255), 2);
-
-            imshow("Tracking", frame);
-            waitKey(30);
+            return box;
         }
-
-        // update flow
-        p0 = p1;
-        oldGrey = grey.clone();
     }
 
-    // ================= FINAL OUTPUT =================
-
-    Mat finalMask;
-    fgbg->apply(lastFrame, finalMask);
-
-    morphologyEx(finalMask, finalMask, MORPH_OPEN, kernel);
-    morphologyEx(finalMask, finalMask, MORPH_DILATE, kernel);
-
-    vector<Point> points;
-    findNonZero(finalMask, points);
-
-    if (points.empty())
-        return Rect();
-
-    return boundingRect(points);
+    // Nothing found
+    return Rect();
 }
 
 namespace fs = std::filesystem;

@@ -13,12 +13,12 @@
 using namespace cv;
 using namespace std;
 
-FeatureTracker::FeatureTracker()
+BGRemoveDetecorr::BGRemoveDetecorr()
 {
     morphKernelSize = 5;
 }
 
-void FeatureTracker::initTracks(const vector<Point2f> &pts, vector<Track> &tracks)
+void BGRemoveDetecorr::initTracks(const vector<Point2f> &pts, vector<Track> &tracks)
 {
     tracks.clear();
     for (auto &pt : pts)
@@ -31,7 +31,7 @@ void FeatureTracker::initTracks(const vector<Point2f> &pts, vector<Track> &track
     }
 }
 
-Rect FeatureTracker::run(const vector<string> &imageFiles)
+Rect BGRemoveDetecorr::run(const vector<string> &imageFiles)
 {
     if (imageFiles.empty())
         return Rect();

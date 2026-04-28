@@ -4,10 +4,10 @@
 #include <vector>
 #include <string>
 
-class FeatureTracker
+class BGRemoveDetecorr
 {
 public:
-    FeatureTracker();
+    BGRemoveDetecorr();
 
     cv::Rect run(const std::vector<std::string> &imageFiles);
 

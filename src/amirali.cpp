@@ -2,7 +2,7 @@
 #include "metrics.hpp"
 #include <iostream>
 
-FeatureTrackerAmirali::FeatureTrackerAmirali()
+OpticalFlowDetecor::OpticalFlowDetecor()
 {
     // Number of feature points we detect
     MAX_CORNERS = 80;
@@ -23,7 +23,7 @@ FeatureTrackerAmirali::FeatureTrackerAmirali()
     CONFIDENCE_THRESHOLD = 0.2f;
 }
 
-void FeatureTrackerAmirali::detectFeatures(const Mat &gray, vector<Point2f> &points)
+void OpticalFlowDetecor::detectFeatures(const Mat &gray, vector<Point2f> &points)
 {
     // Shi-Tomasi corner detector
     goodFeaturesToTrack(gray, points, MAX_CORNERS, QUALITY_LEVEL, MIN_DISTANCE);
@@ -43,7 +43,7 @@ void FeatureTrackerAmirali::detectFeatures(const Mat &gray, vector<Point2f> &poi
 }
 
 // How sure are we that we've found a moving object
-float FeatureTrackerAmirali::computeConfidence(const vector<int> &hits, int frame_id)
+float OpticalFlowDetecor::computeConfidence(const vector<int> &hits, int frame_id)
 {
     int strong = 0;
 
@@ -58,7 +58,7 @@ float FeatureTrackerAmirali::computeConfidence(const vector<int> &hits, int fram
     return 0.8f * ratio + 0.2f * time_factor;
 }
 
-Rect FeatureTrackerAmirali::run(VideoCapture &capture, Mat &out_frame)
+Rect OpticalFlowDetecor::run(VideoCapture &capture, Mat &out_frame)
 {
     Mat first_frame, first_gray;
     capture >> first_frame;

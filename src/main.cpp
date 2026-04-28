@@ -8,8 +8,8 @@ using namespace std;
 int main()
 {
     DetectionMetrics metrics;
-    FeatureTrackerAmirali tracker1;
-    FeatureTracker tracker2;
+    OpticalFlowDetecor tracker1;
+    BGRemoveDetecorr tracker2;
 
     vector<pair<string, string>> data_info = {
         {"bird", "png"},

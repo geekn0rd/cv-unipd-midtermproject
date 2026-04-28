@@ -9,7 +9,7 @@ int main()
 {
     DetectionMetrics metrics;
     FeatureTrackerAmirali tracker1;
-    FeatureTrackerR tracker2;
+    FeatureTracker tracker2;
 
     vector<pair<string, string>> data_info = {
         {"bird", "png"},
@@ -48,11 +48,8 @@ int main()
         cout << "IoU1 for " << label_path << ": " << IoU1 << endl;
 
         // --- tracker2 ---
-        VideoCapture cap2(path);
-        if (!cap2.isOpened())
-            continue;
-
-        Rect pred2 = tracker2.run(cap2);
+        vector<string> imageFiles = getImageList(folder, ext);
+        Rect pred2 = tracker2.run(imageFiles);
         float IoU2 = computeIoU(pred2, gt);
         cout << "IoU2 for " << label_path << ": " << IoU2 << endl;
 

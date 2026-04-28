@@ -1,15 +1,15 @@
 #pragma once
 
 #include <opencv2/core.hpp>
-#include <opencv2/videoio.hpp>
 #include <vector>
+#include <string>
 
-class FeatureTrackerR
+class FeatureTracker
 {
 public:
-    FeatureTrackerR();
+    FeatureTracker();
 
-    cv::Rect run(cv::VideoCapture &capture);
+    cv::Rect run(const std::vector<std::string> &imageFiles);
 
 private:
     struct Track
@@ -22,6 +22,7 @@ private:
     void initTracks(const std::vector<cv::Point2f> &pts,
                     std::vector<Track> &tracks);
 
+private:
     // ===== parameters =====
     int NumberPoints;
     float featureQuality;
@@ -41,3 +42,5 @@ private:
     int finalScoreThreshold;
     int framesToKeep;
 };
+
+std::vector<std::string> getImageList(const std::string &folder_name, const std::string &extension);

@@ -4,12 +4,16 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/video.hpp>
 #include <algorithm>
+#include <filesystem>
+#include <algorithm>
+#include <vector>
+#include <string>
 #include <iostream>
 
 using namespace cv;
 using namespace std;
 
-FeatureTrackerR::FeatureTrackerR()
+FeatureTracker::FeatureTracker()
 {
     NumberPoints = 1000;
     featureQuality = 0.2f;
@@ -30,7 +34,7 @@ FeatureTrackerR::FeatureTrackerR()
     framesToKeep = 2;
 }
 
-void FeatureTrackerR::initTracks(const vector<Point2f> &pts, vector<Track> &tracks)
+void FeatureTracker::initTracks(const vector<Point2f> &pts, vector<Track> &tracks)
 {
     tracks.clear();
     for (auto &pt : pts)
@@ -43,19 +47,13 @@ void FeatureTrackerR::initTracks(const vector<Point2f> &pts, vector<Track> &trac
     }
 }
 
-Rect FeatureTrackerR::run(VideoCapture &capture)
+Rect FeatureTracker::run(const vector<string> &imageFiles)
 {
-    if (!capture.isOpened())
+    if (imageFiles.empty())
         return Rect();
 
-    // buffer all remaining frames
-    vector<Mat> frames;
-    Mat tmp;
-    while (capture.read(tmp))
-        frames.push_back(tmp.clone());
-
-    if (frames.empty())
-        return Rect();
+    vector<string> files = imageFiles;
+    reverse(files.begin(), files.end());
 
     Ptr<BackgroundSubtractor> fgbg =
         createBackgroundSubtractorMOG2(500, 16, false);
@@ -64,7 +62,9 @@ Rect FeatureTrackerR::run(VideoCapture &capture)
         MORPH_ELLIPSE,
         Size(morphKernelSize, morphKernelSize));
 
-    Mat firstFrame = frames[0];
+    Mat firstFrame = imread(files[0]);
+    if (firstFrame.empty())
+        return Rect();
 
     Mat oldGrey;
     cvtColor(firstFrame, oldGrey, COLOR_BGR2GRAY);
@@ -72,19 +72,15 @@ Rect FeatureTrackerR::run(VideoCapture &capture)
     vector<Point2f> p0, p1;
     goodFeaturesToTrack(oldGrey, p0, NumberPoints, featureQuality, minDistance);
 
-    if (p0.empty())
-        return Rect();
-
     vector<Track> tracks;
     initTracks(p0, tracks);
 
     Mat lastFrame = firstFrame.clone();
 
     // ================= MAIN LOOP =================
-    for (size_t f = 1; f < frames.size(); f++)
+    for (size_t f = 1; f < files.size(); f++)
     {
-        Mat frame = frames[f];
-
+        Mat frame = imread(files[f]);
         if (frame.empty())
             continue;
 
@@ -191,4 +187,32 @@ Rect FeatureTrackerR::run(VideoCapture &capture)
         return Rect();
 
     return boundingRect(points);
+}
+
+namespace fs = std::filesystem;
+
+std::vector<std::string> getImageList(const std::string &folder_name, const std::string &extension)
+{
+    std::vector<std::string> files;
+    // Construct the path to the specific category folder
+    fs::path dir_path = fs::path("dataset/data") / folder_name;
+
+    if (!fs::exists(dir_path) || !fs::is_directory(dir_path))
+    {
+        return files;
+    }
+
+    // Iterate through directory
+    for (const auto &entry : fs::directory_iterator(dir_path))
+    {
+        if (entry.is_regular_file() && entry.path().extension() == "." + extension)
+        {
+            files.push_back(entry.path().string());
+        }
+    }
+
+    // Sort paths alphabetically so the sequence is in order (0000, 0001, ...)
+    std::sort(files.begin(), files.end());
+
+    return files;
 }

@@ -1,23 +1,27 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -O2 `pkg-config --cflags opencv4`
-
+CXXFLAGS = -std=c++17 -O2 `pkg-config --cflags opencv4` -Iinclude
 LDFLAGS = `pkg-config --libs opencv4`
 
-TARGET = program
+TARGET = build/program
 
-SRCS = main.cpp algorithm.cpp metrics.cpp FeatureTrackerRilke.cpp
-OBJS = $(SRCS:.cpp=.o)
+SRCS = src/main.cpp \
+       src/amirali.cpp \
+       src/metrics.cpp \
+       src/rilke.cpp
+
+OBJS = $(SRCS:src/%.cpp=build/%.o)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(OBJS) -o $(TARGET) $(LDFLAGS)
 
-%.o: %.cpp
+build/%.o: src/%.cpp
+	mkdir -p build
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(OBJS) $(TARGET)
+	rm -rf build
 
 run: $(TARGET)
 	./$(TARGET)

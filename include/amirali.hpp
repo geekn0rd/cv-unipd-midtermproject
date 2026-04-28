@@ -1,5 +1,5 @@
-#ifndef ALGORITHM_HPP
-#define ALGORITHM_HPP
+#ifndef AMIRALI_HPP
+#define AMIRALI_HPP
 
 #include <opencv2/opencv.hpp>
 using namespace cv;

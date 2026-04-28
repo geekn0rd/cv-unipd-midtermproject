@@ -1,6 +1,6 @@
-#include "algorithm.hpp"
+#include "amirali.hpp"
 #include "metrics.hpp"
-#include "FeatureTrackerRilke.hpp"
+#include "rilke.hpp"
 #include <iostream>
 
 using namespace std;
@@ -35,31 +35,37 @@ int main()
             folder +
             "/0000.txt";
 
-        VideoCapture cap(path);
+        Rect gt = readGroundTruthBox(label_path);
 
-        if (!cap.isOpened())
+        // --- tracker1 ---
+        VideoCapture cap1(path);
+        if (!cap1.isOpened())
             continue;
 
         Mat first_frame;
-        Rect pred1 = tracker1.run(cap, first_frame);
-        Rect gt = readGroundTruthBox(label_path);
-        float IoU = computeIoU(pred1, gt);
-        cout << "IoU for " << label_path << ": " << IoU << endl;
+        Rect pred1 = tracker1.run(cap1, first_frame);
+        float IoU1 = computeIoU(pred1, gt);
+        cout << "IoU1 for " << label_path << ": " << IoU1 << endl;
 
-        Rect pred2 = tracker2.run(cap);
-        Rect gt = readGroundTruthBox(label_path);
-        float IoU = computeIoU(pred1, gt);
-        cout << "IoU for " << label_path << ": " << IoU << endl;
+        // --- tracker2 ---
+        VideoCapture cap2(path);
+        if (!cap2.isOpened())
+            continue;
 
-        metrics.update(IoU);
+        Rect pred2 = tracker2.run(cap2);
+        float IoU2 = computeIoU(pred2, gt);
+        cout << "IoU2 for " << label_path << ": " << IoU2 << endl;
 
-        // Visualization now lives here
+        metrics.update(max(IoU1, IoU2));
+
+        // Visualization
         if (!first_frame.empty() && !pred1.empty())
         {
             Mat result = first_frame.clone();
-            rectangle(result, pred1, Scalar(0, 0, 255), 2); // red = predicted
+            rectangle(result, pred1, Scalar(0, 0, 255), 2); // red = predicted1
+            rectangle(result, pred2, Scalar(0, 255, 0), 2); // green = predicted2
             rectangle(result, gt, Scalar(255, 0, 0), 2);    // blue = ground truth
-            imshow(folder, result);                         // use folder name as window title
+            imshow(folder, result);
             waitKey(0);
         }
     }

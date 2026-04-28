@@ -1,3 +1,4 @@
+// Author: Rilke
 #pragma once
 
 #include <opencv2/core.hpp>

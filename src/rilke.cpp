@@ -1,3 +1,4 @@
+// Author: Rilke
 #include "rilke.hpp"
 
 #include <opencv2/highgui.hpp>

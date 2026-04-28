@@ -1,3 +1,4 @@
+// Author: Amirali
 #ifndef AMIRALI_HPP
 #define AMIRALI_HPP
 

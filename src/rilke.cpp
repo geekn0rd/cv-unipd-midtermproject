@@ -15,18 +15,7 @@ using namespace std;
 
 FeatureTracker::FeatureTracker()
 {
-    foregroundThreshold = 0.5f;
-
-    lkWindowSize = 15;
-    lkMaxLevel = 2;
-
     morphKernelSize = 5;
-
-    foregroundScoreBoost = 4;
-    motionScoreBoost = 1;
-
-    finalScoreThreshold = 40;
-    framesToKeep = 2;
 }
 
 void FeatureTracker::initTracks(const vector<Point2f> &pts, vector<Track> &tracks)
@@ -52,7 +41,7 @@ Rect FeatureTracker::run(const vector<string> &imageFiles)
 
     // Background subtractor
     Ptr<BackgroundSubtractor> fgbg =
-        createBackgroundSubtractorMOG2(500, 16, false);
+        createBackgroundSubtractorMOG2(500, 32, false);
 
     // Morphology kernel for mask cleanup
     Mat kernel = getStructuringElement(
@@ -73,7 +62,7 @@ Rect FeatureTracker::run(const vector<string> &imageFiles)
         frame.copyTo(lastValidFrame); // Keep last valid frame for calculating final box
 
         Mat fgmask;
-        fgbg->apply(frame, fgmask);
+        fgbg->apply(frame, fgmask, 0.02);
 
         morphologyEx(fgmask, fgmask, MORPH_OPEN, kernel); // Clean up noise
         morphologyEx(fgmask, fgmask, MORPH_DILATE, kernel);
@@ -93,7 +82,7 @@ Rect FeatureTracker::run(const vector<string> &imageFiles)
             continue;
 
         Mat finalMask;
-        fgbg->apply(frame, finalMask);
+        fgbg->apply(frame, finalMask, 0);
 
         morphologyEx(finalMask, finalMask, MORPH_OPEN, kernel);
         morphologyEx(finalMask, finalMask, MORPH_DILATE, kernel);

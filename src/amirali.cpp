@@ -27,7 +27,7 @@ void FeatureTrackerAmirali::detectFeatures(const Mat &gray, vector<Point2f> &poi
 {
     // Shi-Tomasi corner detector
     goodFeaturesToTrack(gray, points, MAX_CORNERS, QUALITY_LEVEL, MIN_DISTANCE);
-    std::cout << "[detectFeatures] raw corners: " << points.size() << std::endl;
+    // std::cout << "[detectFeatures] raw corners: " << points.size() << std::endl;
 
     if (!points.empty())
     {
@@ -38,7 +38,7 @@ void FeatureTrackerAmirali::detectFeatures(const Mat &gray, vector<Point2f> &poi
             Size(-1, -1),
             TermCriteria(TermCriteria::COUNT + TermCriteria::EPS, 30, 0.1));
 
-        std::cout << "[detectFeatures] refined corners: " << points.size() << std::endl;
+        // std::cout << "[detectFeatures] refined corners: " << points.size() << std::endl;
     }
 }
 

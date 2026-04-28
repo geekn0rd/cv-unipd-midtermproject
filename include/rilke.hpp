@@ -24,23 +24,7 @@ private:
 
 private:
     // ===== parameters =====
-    int NumberPoints;
-    float featureQuality;
-    double minDistance;
-
-    float motionThreshold;
-    float foregroundThreshold;
-
-    int lkWindowSize;
-    int lkMaxLevel;
-
     int morphKernelSize;
-
-    int foregroundScoreBoost;
-    int motionScoreBoost;
-
-    int finalScoreThreshold;
-    int framesToKeep;
 };
 
 std::vector<std::string> getImageList(const std::string &folder_name, const std::string &extension);
